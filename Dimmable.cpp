@@ -8,7 +8,9 @@
 #include <string>
 #include "Resource.h"
 #include <commctrl.h>
+#include <psapi.h>
 #pragma comment(lib, "comctl32.lib")
+
 
 #define MAX_LOADSTRING 100
 
@@ -18,16 +20,66 @@ float opacity = 0.5f;
 
 // Buffer to store the window name
 static WCHAR windowName[256];
+HWND selectedWindowHandle;
 
 LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
 HWND CreateFullScreenWindow(HINSTANCE);
 
 
+HWND getTargetWindow()
+{
+    if (selectedWindowHandle)
+    {
+        return selectedWindowHandle;
+    }
+
+    HWND targetWnd = FindWindow(NULL, windowName);
+    if (!targetWnd)
+    {
+        // TODO Handle error: target window not found
+        return NULL;
+    }
+
+    selectedWindowHandle = targetWnd;
+
+    return targetWnd;
+}
+
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam) {
     WCHAR buffer[256];
+
+    // Buffer to store the window class name
+    //WCHAR className[256];
+
+    // Get PID from window handle
+
+    /*DWORD dwPID;
+    GetWindowThreadProcessId(hWnd, &dwPID);
+
+    // Get executable name from PID
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwPID);
+    WCHAR exeName[MAX_PATH];
+
+    if (hProcess != NULL) {
+        if (GetModuleFileNameEx(hProcess, NULL, exeName, MAX_PATH)) {
+			// Get the file name from the full path
+			WCHAR* p = wcsrchr(exeName, L'\\');
+            if (p) {
+				wcscpy_s(exeName, p + 1);
+			}
+           
+        }
+    }*/
+
     if (IsWindowVisible(hWnd) && GetWindowText(hWnd, buffer, sizeof(buffer) / sizeof(WCHAR))) {
+
+        // Get the window class name
+        //GetClassName(hWnd, className, sizeof(className) / sizeof(WCHAR));
+
         if (wcscmp(buffer, L"Dimmable") != 0) { // Exclude the window with the title "Dimmable"
             SendDlgItemMessage((HWND)lParam, IDC_COMBO1, CB_ADDSTRING, 0, (LPARAM)buffer);
+            /*reinterpret_cast<LPARAM>((std::to_wstring(dwPID) + L" " + std::wstring(exeName) + L" " + className).c_str())*/
+            
         }
     }
 
@@ -79,6 +131,7 @@ INT_PTR CALLBACK InputBoxProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
         xPos = (GetSystemMetrics(SM_CXSCREEN) - rc.right) / 2;
         yPos = (GetSystemMetrics(SM_CYSCREEN) - rc.bottom) / 2;
         SetWindowPos(hDlg, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
 
         EnumWindows(EnumWindowsProc, (LPARAM)hDlg);
 
@@ -191,7 +244,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
         case WM_TIMER:
         {
             // Find the target window
-            HWND targetWnd = FindWindow(NULL, windowName);
+            HWND targetWnd = getTargetWindow();
             if (targetWnd)
             {
                 // Get the target window's position and size
@@ -212,7 +265,7 @@ HWND CreateFullScreenWindow(HINSTANCE hInstance)
 {
     static TCHAR szAppName[] = TEXT("Overlay");
 
-    HWND targetWnd = FindWindow(NULL, windowName);
+    HWND targetWnd = getTargetWindow();
     if (!targetWnd)
     {
         // TODO Handle error: target window not found
