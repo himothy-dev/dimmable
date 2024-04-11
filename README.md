@@ -7,6 +7,8 @@ Application Shade for Windows
 #### Maybe you don't want to have to fiddle with your monitor settings at night.
 #### Maybe you want a privacy shade, so people can't easily see sensitive information on your screen.
 ### Dimmable is the answer.
+
+Download: https://github.com/himothy-dev/dimmable/releases/download/1.0/Dimmable-1.0-win.exe
 #
 
 You can control the level of shade to overlay on the application, to change the shade after activating it, just re-launch it. 
